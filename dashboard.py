@@ -2,6 +2,7 @@ import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QLabel, QWidget, QHBoxLayout, QPushButton, QStackedWidget, QGridLayout
 from PyQt5.QtCore import QTimer, Qt
 from mock_serial import MockSerial
+import serial
 from past_launches import PastLaunchesScreen, load_past_launches, save_past_launches
 import pyqtgraph as pg
 import threading
@@ -170,7 +171,14 @@ class Dashboard(QWidget):
             self.serial_thread.start()
 
     def read_serial_data(self):
-        ser = MockSerial()
+        #ser = MockSerial()
+        try:
+        # Replace 'COM3' with your actual port (e.g., '/dev/ttyUSB0' on Linux or 'COM3' on Windows)
+            ser = serial.Serial(port='COM4', baudrate=9600, timeout=1)
+            print("reading serial...")
+        except serial.SerialException as e:
+            print("Error opening serial port:", e)
+        return
 
         while self.serial_running.is_set():
             line = ser.readline().decode('utf-8').strip()
