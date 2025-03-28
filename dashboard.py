@@ -115,6 +115,7 @@ class Dashboard(QWidget):
 
         for field in self.data_history:
             plot_widget = pg.PlotWidget(title=f"{field}: ---", labels={'left': field, 'bottom': "Time (s)"})
+            plot_widget.setMinimumWidth(300)
             plot_widget.setLabel("left", field)
             plot_widget.setLabel("bottom", "Time", "s")
             self.graph_layout.addWidget(plot_widget)
@@ -170,11 +171,12 @@ class Dashboard(QWidget):
             self.serial_thread = threading.Thread(target=self.read_serial_data, daemon=True)
             self.serial_thread.start()
 
+    '''
     def read_serial_data(self):
         #ser = MockSerial()
         try:
-        # Replace 'COM3' with your actual port (e.g., '/dev/ttyUSB0' on Linux or 'COM3' on Windows)
             ser = serial.Serial(port='COM4', baudrate=9600, timeout=1)
+            print(ser)
             print("reading serial...")
         except serial.SerialException as e:
             print("Error opening serial port:", e)
@@ -184,7 +186,35 @@ class Dashboard(QWidget):
             line = ser.readline().decode('utf-8').strip()
             if line:
                 self.process_serial_data(line)
+    '''
+    def read_serial_data(self):
+        try:
+            ser = serial.Serial(port='COM4', baudrate=9600, timeout=1)
+        except serial.SerialException as e:
+            print(f"Error opening serial port: {e}")
+            return
 
+        while self.serial_running.is_set():
+            line = ser.readline().decode('utf-8').strip()
+            if line:
+                self.process_serial_data(line)
+        '''
+        print(f"Reading from port at baud. Press Ctrl+C to stop.")
+        try:
+            while True:
+                if ser.in_waiting:
+                    try:
+                        line = ser.readline().decode('utf-8').strip()
+                        if line:
+                            print(line)
+                    except Exception as e:
+                        print("Error decoding data:", e)
+                time.sleep(0.1)  # Slight delay to prevent busy waiting
+        except KeyboardInterrupt:
+            print("Stopping serial read.")
+        finally:
+            ser.close()
+        '''
     def process_serial_data(self, data):
         try:
             fields = data.split(',')
